@@ -1,0 +1,62 @@
+import random
+
+class Company:
+    def __init__(self, name):
+        self.name = name
+
+    def provide_service(self, service):
+        return random.randint(1, 10)
+
+class Agreement:
+    def __init__(self, company, customer, services):
+        self.company = company
+        self.customer = customer
+        self.services = services
+        self.terms = None
+
+    def set_terms(self, terms):
+        self.terms = terms
+
+    def provide_service(self):
+        if self.terms is None:
+            return "Agreement terms are not set."
+        elif self.terms['effort_level'] == 'commercially_reasonable':
+            for service in self.services:
+                effort = self.company.provide_service(service)
+                if effort < self.terms['minimum_effort']:
+                    return "Service effort was not commercially reasonable."
+            return "Services were provided with commercially reasonable efforts."
+        else:
+            return "Effort level not defined in agreement terms."
+
+class SimpleDSL:
+    def __init__(self):
+        self.entities = {}
+
+    def parse(self, command):
+        tokens = command.split()
+        instruction = tokens[0]
+
+        if instruction == "CREATE":
+            if tokens[1] == "COMPANY":
+                self.entities[tokens[2]] = Company(tokens[2])
+            elif tokens[1] == "SERVICE":
+                self.entities[tokens[2]] = tokens[2]
+            elif tokens[1] == "AGREEMENT":
+                terms = {'effort_level': tokens[5], 'minimum_effort': int(tokens[6])}
+                self.entities[tokens[2]] = Agreement(
+                    self.entities[tokens[3]], tokens[4], [self.entities[tokens[5]]])
+                self.entities[tokens[2]].set_terms(terms)
+
+        elif instruction == "PROVIDE_SERVICE":
+            print(self.entities[tokens[1]].provide_service())
+
+        else:
+            print("Invalid command")
+
+# Usage:
+dsl = SimpleDSL()
+dsl.parse("CREATE COMPANY CompanyA")
+dsl.parse("CREATE SERVICE Service1")
+dsl.parse("CREATE AGREEMENT Agreement1 CompanyA CustomerA Service1 commercially_reasonable 5")
+dsl.parse("PROVIDE_SERVICE Agreement1")
